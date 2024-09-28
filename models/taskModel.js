@@ -1,29 +1,28 @@
-const db = require('../db/database');
+const pool = require('../db/database'); // Use the updated database connection
 
 const Task = {
-    getAllTasks: (callback) => {
-        db.all('SELECT * FROM tasks', [], (err, rows) => {
-            if (err) {
-                throw err;
-            }
-            callback(rows);
-        });
+    getAllTasks: async () => {
+        try {
+            const result = await pool.query('SELECT * FROM tasks'); // Use PostgreSQL query
+            return result.rows;
+        } catch (err) {
+            throw err; 
+        }
     },
-    createTask: (name, callback) => {
-        db.run('INSERT INTO tasks (name) VALUES (?)', [name], function(err) {
-            if (err) {
-                throw err;
-            }
-            callback(this.lastID);
-        });
+    createTask: async (name) => {
+        try {
+            const result = await pool.query('INSERT INTO tasks (name) VALUES ($1) RETURNING id', [name]); // Use parameterized query and return ID
+            return result.rows[0].id; // Return the newly created task ID
+        } catch (err) {
+            throw err;
+        }
     },
-    deleteTask: (id, callback) => {
-        db.run('DELETE FROM tasks WHERE id = ?', [id], function(err) {
-            if (err) {
-                throw err;
-            }
-            callback();
-        });
+    deleteTask: async (id) => {
+        try {
+            await pool.query('DELETE FROM tasks WHERE id = $1', [id]); // Use parameterized query
+        } catch (err) {
+            throw err;
+        }
     }
 };
 
